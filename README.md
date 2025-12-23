@@ -1,110 +1,135 @@
-# FHEVM Hardhat Template
+# CryptoVeil
 
-A Hardhat-based template for developing Fully Homomorphic Encryption (FHE) enabled Solidity smart contracts using the
-FHEVM protocol by Zama.
+CryptoVeil is a fully encrypted on-chain grid game where every player position and movement stays private while still
+being verifiable on Ethereum. Players join a 10x10 board, receive a random encrypted starting coordinate, and move
+up/down/left/right using encrypted directions. Only the player can decrypt their position.
 
-## Quick Start
+## Why CryptoVeil
 
-For detailed instructions see:
-[FHEVM Hardhat Quick Start Tutorial](https://docs.zama.ai/protocol/solidity-guides/getting-started/quick-start-tutorial)
+Blockchains are transparent by default, which makes location-based gameplay or hidden-state mechanics hard to build
+without leaking data. CryptoVeil solves this with Fully Homomorphic Encryption (FHE) so that game logic executes on
+encrypted data while preserving correctness and privacy.
+
+## Key Advantages
+
+- **True on-chain privacy**: Positions and moves remain encrypted on-chain; no plaintext leaks.
+- **Verifiable randomness**: Starting positions use Zama FHE randomness within the contract.
+- **Deterministic boundaries**: Encrypted movement is clamped within a 1-10 grid.
+- **Player-controlled visibility**: Players can decrypt only their own coordinates.
+- **Simple, auditable core**: Minimal surface area makes the gameplay logic easy to verify.
+
+## Problems Solved
+
+- **Hidden state on public chains**: Keeps sensitive game data private without off-chain trust.
+- **Fair movement without server authority**: All updates are validated in the smart contract.
+- **Random spawning with privacy**: Randomness stays encrypted while producing bounded coordinates.
+
+## How It Works
+
+1. **Join**: A player calls `joinGame` and receives a random encrypted `(x, y)` within the 10x10 board.
+2. **Decrypt**: The player requests decryption on the client to learn their own coordinates.
+3. **Move**: The player sends an encrypted direction (0=up, 1=down, 2=left, 3=right).
+4. **Update**: The contract updates the encrypted position while respecting the board edges.
+
+## Tech Stack
+
+- **Smart contracts**: Solidity + Hardhat
+- **FHE**: Zama FHEVM
+- **Frontend**: React + Vite
+- **Wallet + UX**: RainbowKit
+- **Read operations**: viem
+- **Write operations**: ethers
+
+## Project Structure
+
+```
+.
+├── contracts/        # Solidity contracts
+├── deploy/           # Deployment scripts
+├── deployments/      # Deployment outputs and ABIs
+├── tasks/            # Hardhat tasks
+├── test/             # Tests
+├── src/              # Frontend app (Vite)
+└── docs/             # Zama-related references
+```
+
+## Smart Contract Overview
+
+Contract: `contracts/CryptoVeilGame.sol`
+
+- **joinGame()**: Assigns a random encrypted starting coordinate.
+- **move(direction, proof)**: Applies encrypted movement and clamps within the board.
+- **getPlayerPosition(player)**: Returns encrypted coordinates for a player address.
+- **hasJoined(player)**: Checks join status.
+- **boardLimits()**: Returns `(1, 10)` for UI boundaries.
+
+## Local Development
 
 ### Prerequisites
 
-- **Node.js**: Version 20 or higher
-- **npm or yarn/pnpm**: Package manager
+- Node.js 20+
+- npm
 
-### Installation
+### Install
 
-1. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-2. **Set up environment variables**
-
-   ```bash
-   npx hardhat vars set MNEMONIC
-
-   # Set your Infura API key for network access
-   npx hardhat vars set INFURA_API_KEY
-
-   # Optional: Set Etherscan API key for contract verification
-   npx hardhat vars set ETHERSCAN_API_KEY
-   ```
-
-3. **Compile and test**
-
-   ```bash
-   npm run compile
-   npm run test
-   ```
-
-4. **Deploy to local network**
-
-   ```bash
-   # Start a local FHEVM-ready node
-   npx hardhat node
-   # Deploy to local network
-   npx hardhat deploy --network localhost
-   ```
-
-5. **Deploy to Sepolia Testnet**
-
-   ```bash
-   # Deploy to Sepolia
-   npx hardhat deploy --network sepolia
-   # Verify contract on Etherscan
-   npx hardhat verify --network sepolia <CONTRACT_ADDRESS>
-   ```
-
-6. **Test on Sepolia Testnet**
-
-   ```bash
-   # Once deployed, you can run a simple test on Sepolia.
-   npx hardhat test --network sepolia
-   ```
-
-## 📁 Project Structure
-
-```
-fhevm-hardhat-template/
-├── contracts/           # Smart contract source files
-│   └── FHECounter.sol   # Example FHE counter contract
-├── deploy/              # Deployment scripts
-├── tasks/               # Hardhat custom tasks
-├── test/                # Test files
-├── hardhat.config.ts    # Hardhat configuration
-└── package.json         # Dependencies and scripts
+```bash
+npm install
 ```
 
-## 📜 Available Scripts
+### Compile and Test
 
-| Script             | Description              |
-| ------------------ | ------------------------ |
-| `npm run compile`  | Compile all contracts    |
-| `npm run test`     | Run all tests            |
-| `npm run coverage` | Generate coverage report |
-| `npm run lint`     | Run linting checks       |
-| `npm run clean`    | Clean build artifacts    |
+```bash
+npm run compile
+npm run test
+```
 
-## 📚 Documentation
+### Local Node and Deployment
 
-- [FHEVM Documentation](https://docs.zama.ai/fhevm)
-- [FHEVM Hardhat Setup Guide](https://docs.zama.ai/protocol/solidity-guides/getting-started/setup)
-- [FHEVM Testing Guide](https://docs.zama.ai/protocol/solidity-guides/development-guide/hardhat/write_test)
-- [FHEVM Hardhat Plugin](https://docs.zama.ai/protocol/solidity-guides/development-guide/hardhat)
+```bash
+npx hardhat node
+npx hardhat deploy --network localhost
+```
 
-## 📄 License
+## Sepolia Deployment
 
-This project is licensed under the BSD-3-Clause-Clear License. See the [LICENSE](LICENSE) file for details.
+The Hardhat config expects environment values for Sepolia. Use a private key (no mnemonic).
 
-## 🆘 Support
+- `INFURA_API_KEY`
+- `PRIVATE_KEY`
+- `ETHERSCAN_API_KEY` (optional)
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/zama-ai/fhevm/issues)
-- **Documentation**: [FHEVM Docs](https://docs.zama.ai)
-- **Community**: [Zama Discord](https://discord.gg/zama)
+Deploy:
 
----
+```bash
+npx hardhat deploy --network sepolia
+```
 
-**Built with ❤️ by the Zama team**
+Verify (optional):
+
+```bash
+npx hardhat verify --network sepolia <CONTRACT_ADDRESS>
+```
+
+## Frontend Notes
+
+- The frontend ABI must be copied from `deployments/sepolia` after deployment.
+- Read calls use `viem`; write calls use `ethers`.
+- The game does not rely on localhost networks or local storage.
+
+## Security and Privacy Considerations
+
+- Encrypted positions are stored on-chain; only the player is granted decryption access.
+- Movement is normalized to four directions and bounded within the grid.
+- No view function relies on `msg.sender` for address inputs.
+
+## Future Roadmap
+
+- **Multiplayer interactions**: Encrypted proximity checks, fog-of-war mechanics.
+- **Objectives and rewards**: Encrypted quest items and location-based payouts.
+- **Anti-collusion mechanics**: Rate limits and encrypted audit trails.
+- **Map expansions**: Larger boards and dynamic zones.
+- **UX improvements**: Faster relayer workflows and clearer encrypted state visuals.
+
+## License
+
+BSD-3-Clause-Clear. See `LICENSE`.
